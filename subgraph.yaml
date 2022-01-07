@@ -1,0 +1,64 @@
+specVersion: 0.0.2
+description: Subgraph that indexes pulsechain testnet omnibridge transfers
+repository: https://github.com/84dCgcH8C/ropsten-to-pulsechain-testnet-omnibridge
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Omnibridge
+    network: ropsten
+    source:
+      abi: Omnibridge
+      address: "0x27518E50f7C6a26f5fB4909CF8c45D7955A4eb2d"
+      startBlock: 11610686
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      abis:
+        - name: Bridge
+          file: Omnibridge/src/abis/bridge.json
+        - name: Omnibridge
+          file: Omnibridge/src/abis/omnibridge.json
+        - name: Token
+          file: Omnibridge/src/abis/token.json
+      entities:
+        - BridgeTransfer
+        - Token
+      eventHandlers:
+        - event: TokensBridged(indexed address,indexed address,uint256,indexed bytes32)
+          handler: handleBridgeTransfer
+        - event: TokensBridgingInitiated(indexed address,address,uint256,indexed bytes32,indexed
+            address)
+          handler: handleInitiateTransfer
+        - event: NewTokenRegistered(indexed address,indexed address)
+          handler: handleNewToken
+      file: Omnibridge/Omnibridge.wasm
+      language: wasm/assemblyscript
+  - kind: ethereum/contract
+    name: AMB
+    network: ropsten
+    source:
+      abi: AMB
+      address: "0x3B7aC75a12043567BaBBe8d92D88BB6E216033aB"
+      startBlock: 11610686
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      abis:
+        - name: AMB
+          file: AMB/src/abis/amb.json
+      entities:
+        - UserRequest
+      eventHandlers:
+        - event: UserRequestForSignature(indexed bytes32,bytes)
+          handler: handleUserRequestForSignature
+        - event: UserRequestForAffirmation(indexed bytes32,bytes)
+          handler: handleUserRequestForAffirmation
+        - event: RelayedMessage(indexed address,indexed address,indexed bytes32,bool)
+          handler: handleRelayedMessage
+        - event: AffirmationCompleted(indexed address,indexed address,indexed bytes32,bool)
+          handler: handleAffirmationCompleted
+        - event: CollectedSignatures(address,bytes32,uint256)
+          handler: handleCollectedSignatures
+      file: AMB/AMB.wasm
+      language: wasm/assemblyscript
